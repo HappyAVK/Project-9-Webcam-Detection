@@ -1,0 +1,1 @@
+## This App detects movement on a webcam with delta frames and sends emails Once the object has left the view

@@ -1,12 +1,20 @@
 import cv2
 import time
 from send_mail import mail_send
+import glob
+import os
 video = cv2.VideoCapture(0)
 
 time.sleep(1)
 first_frame = None
 status_list = []
 detected_image = None
+
+def clean_folder():
+    images = glob.glob("images/*.png")
+    for im in images:
+        os.remove(im)
+
 while True:
     status = 0
     check1, frame1 = video.read()
@@ -14,7 +22,7 @@ while True:
     gray_frame = cv2.cvtColor(frame1, cv2.COLOR_BGR2GRAY)
 
     gray_frame_gau =cv2.GaussianBlur(gray_frame, (21, 21), 0)
-
+    count = 0
     if first_frame is None:
         first_frame = gray_frame_gau
 
@@ -35,14 +43,19 @@ while True:
         rectangle = cv2.rectangle(frame1, (x, y), (x+width, y+height), (0, 0, 255), 3)
         if rectangle.any():
             status = 1
+            count = count + 1
+            cv2.imwrite(f"images/img_{count}.png", frame1)
+            all_images= glob.glob("images/*.png")
+            index = int(len(all_images) / 2)
+            image_to_send = all_images[index]
 
 
     status_list.append(status)
     status_list = status_list[-2:]
     if status_list[0] == 1 and status_list[1] == 0:
-        mail_send()
-        print("Email!")
-        detected_image = frame1
+        mail_send(image_to_send)
+        clean_folder()
+        time.sleep(60)
     cv2.imshow("Video_true", frame1)
 
 
